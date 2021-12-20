@@ -1,0 +1,38 @@
+version: '3.8'
+
+networks:
+    web:
+      driver:  bridge
+
+services:
+  chrome:
+    image: selenium/standalone-chrome:96.0
+    shm_size: 2gb
+    ports:
+      - 4444:4444
+    networks:
+      - web
+
+  backend:
+    build: ./backend
+    command: uvicorn app.main:app --reload --workers 1 --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend:/usr/src/app
+    ports:
+      - 8000:8000
+    environment:
+      - DATABASE_URL=sqlite:///./prod.db
+    networks:
+      - web
+    depends_on:
+      - chrome
+
+  frontend:
+    build: ./frontend
+    command: npm start
+    volumes:
+      - ./frontend:/app
+    expose:
+      - 3000
+    ports:
+      - 3000:3000

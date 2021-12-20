@@ -4,6 +4,7 @@ from typing import Any, List
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from webdriver_manager.chrome import ChromeDriverManager
 
 
@@ -11,7 +12,7 @@ class ProcessUrl:
     """Process URL"""
 
     def __init__(self, url: str):
-        self.__driver = self.__get_driver()
+        self.__driver = self.__get_driver_in_docker()
         self.__driver.get(url)
 
     def __enter__(self):
@@ -73,3 +74,9 @@ class ProcessUrl:
         chrome_options = Options()
         chrome_options.add_argument('--headless')
         return webdriver.Chrome(executable_path=chrome_driver, chrome_options=chrome_options)
+
+    def __get_driver_in_docker(self):
+        """Get driver of selenium chrome in docker"""
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        return webdriver.Remote("http://chrome:4444/wd/hub", options=chrome_options)
