@@ -1,18 +1,33 @@
-import os
-from process_url import ProcessUrl
-import asyncio
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api import bookmark
+from app.database import Base, engine
 
 
+def create_app() -> FastAPI:
+    application = FastAPI()
 
-async def main() -> None:
-    process_url = ProcessUrl(url='https://stackoverflow.com/questions/626754/how-to-find-out-the-summarized-text-of-a-given-url-in-python-django')
-    # print(await process_url.get_screenshot(file_name='test'))
-    # print(process_url.get_title())
-    # print(process_url.find_p())
-    with open('./note.txt', 'w') as f:
-        for i in process_url.get_some_data():
-            f.write(i)
+    # middleware
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # add route
+    application.include_router(bookmark.router,
+                               tags=['Bookmark'],
+                               prefix='/bookmarks')
+
+    return application
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+app = create_app()
+
+
+@app.on_event('startup')
+def startup():
+    Base.metadata.create_all(engine)

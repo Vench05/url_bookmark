@@ -1,24 +1,34 @@
 import os
 import tempfile
+from typing import Any, List
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-
 
 
 class ProcessUrl:
     """Process URL"""
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str):
         self.__driver = self.__get_driver()
         self.__driver.get(url)
-    
-    def get_some_data(self) -> str:
-        h1 = self.__driver.find_element_by_tag_name('h1').text
-        p = self.__driver.find_element_by_tag_name('p').text
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.__driver.quit()
-        return f'{h1.strip()}\n{p.strip()}'
-    
+
+    def get_some_data(self, tags: List[str] = ['h1', 'p']) -> str:
+        info = []
+        for tag in tags:
+            try:
+                info.append(self.__driver.find_element_by_tag_name(tag).text)
+            except NoSuchElementException as e:
+                print(f'Error: {e}')
+        return ' '.join(info)
+
     def get_title(self) -> str:
         """Get tag title of html
 
@@ -26,10 +36,9 @@ class ProcessUrl:
             str: title
         """
         title = self.__driver.title
-        self.__driver.quit()
         return title
 
-    async def get_screenshot(self, file_name: str) -> str:
+    def get_screenshot(self, file_name: str) -> str:
         """Sreenshot a webpage using selenuim
 
         Args:
@@ -40,10 +49,9 @@ class ProcessUrl:
         """
         path = os.path.join(self.screenshot_location(), file_name + '.png')
         self.__driver.save_screenshot(path)
-        self.__driver.quit()
 
         return path
-    
+
     @staticmethod
     def screenshot_location() -> str:
         """Make screenshot folder location if not exists
@@ -56,11 +64,10 @@ class ProcessUrl:
 
         if not os.path.isdir(dir_path):
             os.makedirs(dir_path)
-            
+
         return dir_path
-        
-    @staticmethod
-    def __get_driver():
+
+    def __get_driver(self):
         """Get driver of selenium chrome"""
         chrome_driver = ChromeDriverManager().install()
         chrome_options = Options()
