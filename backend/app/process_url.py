@@ -1,6 +1,6 @@
 import os
 import tempfile
-from typing import Any, List
+from typing import List
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
@@ -12,7 +12,7 @@ class ProcessUrl:
     """Process URL"""
 
     def __init__(self, url: str):
-        self.__driver = self.__get_driver_in_docker()
+        self.__driver = self.__get_driver()
         self.__driver.get(url)
 
     def __enter__(self):
@@ -53,6 +53,21 @@ class ProcessUrl:
 
         return path
 
+    # @staticmethod
+    # def screenshot_location() -> str:
+    #     """Make screenshot folder location if not exists
+
+    #     Returns:
+    #         str: folder location
+    #     """
+    #     temp_dir = tempfile.gettempdir()
+    #     dir_path = os.path.join(temp_dir, 'screenshot')
+
+    #     if not os.path.isdir(dir_path):
+    #         os.makedirs(dir_path)
+
+    #     return dir_path
+    
     @staticmethod
     def screenshot_location() -> str:
         """Make screenshot folder location if not exists
@@ -60,8 +75,7 @@ class ProcessUrl:
         Returns:
             str: folder location
         """
-        temp_dir = tempfile.gettempdir()
-        dir_path = os.path.join(temp_dir, 'screenshot')
+        dir_path = os.path.abspath(os.path.join(os.pardir, 'frontend', 'src', 'image'))
 
         if not os.path.isdir(dir_path):
             os.makedirs(dir_path)
@@ -77,6 +91,7 @@ class ProcessUrl:
 
     def __get_driver_in_docker(self):
         """Get driver of selenium chrome in docker"""
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--headless')
-        return webdriver.Remote("http://chrome:4444/wd/hub", options=chrome_options)
+        options = webdriver.ChromeOptions()
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--headless')
+        return webdriver.Remote("http://chrome:4444", options=options, desired_capabilities=DesiredCapabilities.CHROME)

@@ -18,6 +18,11 @@ router = APIRouter()
 @router.post('/', response_model=BookMarkResponse, status_code=201)
 def post_bookmark(req: BookMarkRequest, db: Session = Depends(get_db)):
     new_bookmark = create_bookmark(req=req, db=db)
+    if not new_bookmark:
+        raise HTTPException(
+            detail='URL already exist',
+            status_code=409
+        )
     return new_bookmark
 
 
@@ -35,13 +40,13 @@ def get_bookmark(id: int, db: Session = Depends(get_db)):
     return bookmark
 
 
-@router.delete('/{id}/delete')
+@router.delete('/{id}/delete' )
 def delete_bookmark(id: int, db: Session = Depends(get_db)):
     bookmark = get_bookmark_by_id(id=id, db=db)
     if not bookmark:
         raise HTTPException(detail=f'bookmark ID:{id} not found',
                             status_code=404)
-    return delete_bookmark_by_id(id=id, db=db)
+    return delete_bookmark_by_id(bookmark=bookmark, db=db)
 
 
 @router.put('/{id}/update', response_model=BookMarkResponse)
