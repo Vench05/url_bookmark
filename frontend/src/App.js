@@ -43,7 +43,7 @@ function App() {
         {bookmarks.map(data =>
           <Accordion.Item eventKey={data.id} key={data.id}>
             <Accordion.Header>
-              <CloseButton onClick={deleteUrl} />
+              <CloseButton onClick={() => deleteUrl(data.id)} />
               {data.title}
             </Accordion.Header>
             <Accordion.Body>
